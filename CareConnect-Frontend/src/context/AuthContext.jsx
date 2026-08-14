@@ -11,9 +11,13 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
+      const storedId = localStorage.getItem('userId');
+      const numericId = storedId ? Number(storedId) : null;
       setUser({
         token,
         userType,
+        id: numericId,
+        userId: numericId,
         name: localStorage.getItem('userName') || 'User',
       });
     }
@@ -24,7 +28,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('refresh', authData.refreshToken);
     localStorage.setItem('userType', authData.userType);
     localStorage.setItem('userName', authData.name || 'User');
-    localStorage.setItem('userId', authData.userId);
+    if (authData.userId) {
+      localStorage.setItem('userId', authData.userId);
+    }
+
+    const numericId = authData.userId ? Number(authData.userId) : null;
 
     setToken(authData.accessToken);
     setUserType(authData.userType);
@@ -32,8 +40,21 @@ export const AuthProvider = ({ children }) => {
       token: authData.accessToken,
       userType: authData.userType,
       name: authData.name,
-      userId: authData.userId,
+      id: numericId,
+      userId: numericId,
     });
+  };
+
+  const register = async (userData) => {
+    const data = await authService.register(userData);
+    loginSuccess(data);
+    return data;
+  };
+
+  const login = async (credentials) => {
+    const data = await authService.login(credentials);
+    loginSuccess(data);
+    return data;
   };
 
   const logout = async () => {
@@ -45,7 +66,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, userType, loginSuccess, logout, loading, setLoading }}>
+    <AuthContext.Provider value={{ user, token, userType, register, login, loginSuccess, logout, loading, setLoading }}>
       {children}
     </AuthContext.Provider>
   );

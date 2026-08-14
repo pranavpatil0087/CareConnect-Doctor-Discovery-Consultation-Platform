@@ -187,27 +187,40 @@ export const DoctorSearchPage = () => {
             >
               {doctors.map((doc) => (
                 <motion.div variants={itemVariants} key={doc.id}>
-                  <div className="bg-[#ffffff] p-6 rounded-3xl flex flex-col md:flex-row gap-6 items-start md:items-center border border-[#eaefed] hover:border-[#bcc9c6] hover:shadow-md transition-all cursor-pointer group">
+                  <div className="bg-[#ffffff] p-6 rounded-3xl flex flex-col md:flex-row gap-6 items-start md:items-center border border-[#eaefed] hover:border-[#bcc9c6] hover:shadow-md transition-all cursor-pointer group" onClick={() => navigate(`/doctors/${doc.id}`)}>
                     <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0 bg-[#eaefed]">
-                      <img src={doc.profilePictureUrl || 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=300&q=80'} alt={doc.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img
+                        src={doc.profilePictureUrl || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80'}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80';
+                        }}
+                        alt={doc.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
                       <div className={`absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${doc.availability ? 'bg-[#00835f]' : 'bg-[#ba1a1a]'}`}></div>
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-3 mb-1.5">
                         <h3 className="text-xl font-bold font-['Plus_Jakarta_Sans'] text-[#171d1c] group-hover:text-[#00685f] transition-colors">{doc.name}</h3>
+                        {doc.degree && (
+                          <span className="px-2 py-0.5 rounded-md bg-[#f0f5f2] text-[#00685f] text-xs font-bold uppercase">
+                            {doc.degree}
+                          </span>
+                        )}
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${doc.availability ? 'bg-[#ccf2e3] text-[#00835f]' : 'bg-[#ffdad6] text-[#ba1a1a]'}`}>
                           {doc.availability ? 'Available Today' : 'Offline'}
                         </span>
                       </div>
 
                       <p className="text-sm font-medium text-[#00685f] mb-2 flex items-center gap-2">
-                        {doc.specialization} <span className="w-1 h-1 rounded-full bg-[#bcc9c6]"></span> <span className="text-xs text-[#6d7a77]">{doc.experience} Yrs Exp.</span>
+                        {doc.specialization} <span className="w-1 h-1 rounded-full bg-[#bcc9c6]"></span> <span className="text-xs text-[#6d7a77]">{doc.experience || 0} Yrs Exp.</span>
                       </p>
 
                       <p className="text-sm text-[#3d4947] flex items-center gap-1.5">
                         <MapPin size={16} className="text-[#6d7a77] shrink-0" />
-                        {doc.fullAddress || doc.workingOn || 'CareConnect Partner Clinic'}
+                        {doc.clinicName || doc.workingOn || doc.fullAddress || 'CareConnect Partner Clinic'} {doc.city ? `(${doc.city})` : ''}
                       </p>
                     </div>
 

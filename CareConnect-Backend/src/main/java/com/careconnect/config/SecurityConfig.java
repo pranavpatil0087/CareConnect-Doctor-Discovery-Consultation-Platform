@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/",
+                                "/api/health",
                                 "/api/v1/auth/**",
                                 "/api/auth/**",
                                 "/otp/**",
@@ -56,9 +57,13 @@ public class SecurityConfig {
                                 "/api/v1/specialities/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/uploads/**",
+                                "/ws-video/**",
+                                "/api/v1/doctors/upload-image"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/doctors/**", "/doctor/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 

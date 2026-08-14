@@ -34,7 +34,7 @@ export const AppointmentDetailPage = () => {
               <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Booking Confirmation</span>
               <h2 style={{ fontSize: '24px', marginTop: '4px' }}>Booking #{appointment.bookingId}</h2>
             </div>
-            <span className={`badge badge-${appointment.status.toLowerCase()}`} style={{ padding: '6px 16px', fontSize: '14px' }}>
+            <span className={`badge badge-${(appointment.status || 'booked').toLowerCase()}`} style={{ padding: '6px 16px', fontSize: '14px' }}>
               {appointment.status}
             </span>
           </div>

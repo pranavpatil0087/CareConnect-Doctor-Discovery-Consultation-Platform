@@ -80,4 +80,20 @@ public class AppointmentController {
         PrescriptionDto prescription = appointmentService.addPrescription(request);
         return ResponseEntity.ok(ApiResponse.success("Prescription issued successfully!", prescription));
     }
+
+    @GetMapping("/{appointmentId}/prescription/pdf")
+    @Operation(summary = "Download Prescription PDF for an appointment")
+    public ResponseEntity<byte[]> getPrescriptionPdf(
+            @PathVariable Long appointmentId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+
+        byte[] pdfBytes = appointmentService.getPrescriptionPdf(appointmentId, userPrincipal.getId());
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "Prescription_" + appointmentId + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
 }

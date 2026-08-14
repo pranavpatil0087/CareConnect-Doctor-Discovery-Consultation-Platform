@@ -36,13 +36,33 @@ class AppointmentServiceTest {
     @Autowired
     private AppointmentRepository appointmentRepository;
 
+    @Autowired
+    private com.careconnect.repository.NotificationRepository notificationRepository;
+
+    @Autowired
+    private com.careconnect.repository.AuditLogRepository auditLogRepository;
+
+    @Autowired
+    private com.careconnect.repository.ReviewRepository reviewRepository;
+
+    @Autowired
+    private com.careconnect.repository.PrescriptionRepository prescriptionRepository;
+
+    @Autowired
+    private com.careconnect.repository.PatientProfileRepository patientProfileRepository;
+
     private User patientUser;
     private DoctorProfile doctorProfile;
 
     @BeforeEach
     void setUp() {
+        notificationRepository.deleteAll();
+        auditLogRepository.deleteAll();
+        reviewRepository.deleteAll();
+        prescriptionRepository.deleteAll();
         appointmentRepository.deleteAll();
         doctorProfileRepository.deleteAll();
+        patientProfileRepository.deleteAll();
         userRepository.deleteAll();
 
         patientUser = userRepository.save(User.builder()

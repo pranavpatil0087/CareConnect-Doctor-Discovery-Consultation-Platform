@@ -9,6 +9,7 @@ import { PatientDashboard } from '../pages/PatientDashboard';
 import { DoctorDashboard } from '../pages/DoctorDashboard';
 import { AppointmentDetailPage } from '../pages/AppointmentDetailPage';
 import { VideoCallPage } from '../pages/VideoCallPage';
+import AdminDashboardPage from '../pages/AdminDashboardPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export const AppRoutes = () => {
@@ -19,6 +20,16 @@ export const AppRoutes = () => {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/doctors" element={<DoctorSearchPage />} />
       <Route path="/doctors/:doctorId" element={<DoctorDetailPage />} />
+
+      {/* Admin Protected Routes */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute allowedRole="admin">
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Patient Protected Routes */}
       <Route

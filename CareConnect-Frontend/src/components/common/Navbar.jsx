@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 export const Navbar = () => {
   const { user, logout } = useAuth();
@@ -66,11 +67,24 @@ export const Navbar = () => {
                 Doctor Portal
               </Link>
             )}
+            {user?.userType === 'admin' && (
+              <Link
+                to="/admin"
+                className={`font-medium text-sm transition-all duration-300 ${
+                  location.pathname === '/admin'
+                    ? 'text-[#00685f] bg-[#d3e5f1] px-4 py-1.5 rounded-full'
+                    : 'text-[#3d4947] hover:text-[#00685f] hover:bg-[#f0f5f2] px-4 py-1.5 rounded-full'
+                }`}
+              >
+                Admin Portal
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center space-x-3">
             {user ? (
               <div className="flex items-center gap-3">
+                <NotificationBell />
                 <span className="hidden md:inline-block text-sm font-medium text-[#171d1c]">
                   {user.name.split(' ')[0]}
                 </span>

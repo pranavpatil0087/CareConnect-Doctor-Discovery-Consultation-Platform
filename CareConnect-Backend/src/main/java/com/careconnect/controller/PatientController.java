@@ -37,4 +37,13 @@ public class PatientController {
         PatientDto updated = patientService.updatePatientProfile(userPrincipal.getId(), dto);
         return ResponseEntity.ok(ApiResponse.success("Patient profile updated successfully", updated));
     }
+
+    @GetMapping("/api/v1/patients/me/medical-history")
+    @PreAuthorize("hasRole('PATIENT')")
+    @Operation(summary = "Get current patient medical history and previous consultations")
+    public ResponseEntity<ApiResponse<java.util.List<com.careconnect.dto.response.MedicalHistoryDto>>> getMedicalHistory(
+            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        java.util.List<com.careconnect.dto.response.MedicalHistoryDto> history = patientService.getMedicalHistoryForPatient(userPrincipal.getId());
+        return ResponseEntity.ok(ApiResponse.success("Patient medical history retrieved successfully", history));
+    }
 }

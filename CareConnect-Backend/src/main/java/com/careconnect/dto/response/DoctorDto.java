@@ -30,6 +30,13 @@ public class DoctorDto {
     private Integer fees;
     private Integer experience;
     private BigDecimal rating;
+    private Long reviewCount;
     private Boolean availability;
     private String workingOn;
+
+    private String degree;
+    private String licenseNumber;
+    private String clinicName;
+    private String languages;
+    private String bio;
 }

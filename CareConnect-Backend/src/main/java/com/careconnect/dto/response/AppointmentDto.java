@@ -20,6 +20,7 @@ public class AppointmentDto {
     private Long patientId;
     private String patientName;
     private UUID doctorId;
+    private Long doctorUserId;
     private String doctorName;
     private String doctorSpecialization;
     private LocalDate appointmentDate;

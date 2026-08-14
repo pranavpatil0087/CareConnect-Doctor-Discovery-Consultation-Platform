@@ -11,6 +11,20 @@ export const doctorService = {
     return response.data;
   },
 
+  uploadProfileImage: async (formData) => {
+    const response = await api.post('/api/v1/doctors/me/profile-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
+  uploadPublicImage: async (formData) => {
+    const response = await api.post('/api/v1/doctors/upload-image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
   updateAvailability: async (isAvailable) => {
     const response = await api.patch('/api/v1/doctors/me/availability', { isAvailable });
     return response.data;
@@ -18,6 +32,11 @@ export const doctorService = {
 
   getYearlyEarnings: async () => {
     const response = await api.get('/api/v1/doctors/me/earnings');
+    return response.data;
+  },
+
+  getDoctorPatients: async () => {
+    const response = await api.get('/api/v1/doctors/me/patients');
     return response.data;
   },
 

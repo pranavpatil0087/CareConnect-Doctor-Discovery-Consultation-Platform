@@ -36,6 +36,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
     private final OtpService otpService;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public JwtAuthResponse login(LoginRequest request) {
@@ -52,8 +53,14 @@ public class AuthService {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new BadRequestException("User record not found"));
 
-        String userType = user.getRoles().stream()
-                .anyMatch(r -> r.getName() == RoleName.ROLE_DOCTOR) ? "doctor" : "patient";
+        String userType = "patient";
+        if (user.getRoles().stream().anyMatch(r -> r.getName() == RoleName.ROLE_ADMIN)) {
+            userType = "admin";
+        } else if (user.getRoles().stream().anyMatch(r -> r.getName() == RoleName.ROLE_DOCTOR)) {
+            userType = "doctor";
+        }
+
+        auditLogService.logEvent(user.getId(), "ROLE_" + userType.toUpperCase(), "USER_LOGIN", "USER", user.getId().toString(), "User logged in successfully via contact " + request.getContact(), null);
 
         return JwtAuthResponse.builder()
                 .message("Login successful")
@@ -99,6 +106,7 @@ public class AuthService {
                 .city(request.getCity())
                 .state(request.getState())
                 .country(request.getCountry())
+                .profilePictureUrl(request.getProfilePictureUrl())
                 .roles(roles)
                 .isVerified(true)
                 .build();
@@ -120,7 +128,12 @@ public class AuthService {
                     .speciality(speciality)
                     .fees(request.getFees() != null ? request.getFees() : 500)
                     .experienceYears(request.getExperience() != null ? request.getExperience() : 2)
-                    .workingOn(request.getWorkingOn() != null ? request.getWorkingOn() : "General Consultation")
+                    .workingOn(request.getWorkingOn() != null ? request.getWorkingOn() : (request.getClinicName() != null ? request.getClinicName() : "General Consultation"))
+                    .degree(request.getDegree())
+                    .licenseNumber(request.getLicenseNumber())
+                    .clinicName(request.getClinicName() != null ? request.getClinicName() : request.getWorkingOn())
+                    .languages(request.getLanguages())
+                    .bio(request.getBio())
                     .isAvailable(true)
                     .build();
 
@@ -139,6 +152,8 @@ public class AuthService {
 
         String accessToken = tokenProvider.generateAccessToken(authentication);
         String refreshToken = tokenProvider.generateRefreshToken(authentication);
+
+        auditLogService.logEvent(savedUser.getId(), isDoctor ? "ROLE_DOCTOR" : "ROLE_PATIENT", "USER_REGISTER", "USER", savedUser.getId().toString(), "New user registered as " + (isDoctor ? "Doctor" : "Patient"), null);
 
         return JwtAuthResponse.builder()
                 .message("User registered successfully")

@@ -2,68 +2,71 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doctorService } from '../services/doctorService';
 import { appointmentService } from '../services/appointmentService';
+import { reviewService } from '../services/reviewService';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Calendar, Clock, MapPin, Award, Video, UserCheck } from 'lucide-react';
+import { Modal } from '../components/common/Modal';
+import { CheckCircle, Calendar, Clock, MapPin, Award, Video, UserCheck, Star, MessageSquare } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export const DoctorDetailPage = () => {
-  const { id } = useParams();
+  const { doctorId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const [doctor, setDoctor] = useState(null);
-  const [slots, setSlots] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [availableSlots] = useState([
+    '09:00 AM', '10:30 AM', '11:45 AM', '02:00 PM', '03:30 PM', '05:00 PM'
+  ]);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split('T')[0]
+  );
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [consultationType, setConsultationType] = useState('VIDEO_CALL');
+  const [consultationMedium, setConsultationMedium] = useState('VIDEO');
+  const [paymentMethod, setPaymentMethod] = useState('CARD');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchDoctorAndSlots();
-  }, [id]);
+    fetchDoctorDetails();
+    fetchReviews();
+  }, [doctorId]);
 
-  const fetchDoctorAndSlots = async () => {
+  const fetchDoctorDetails = async () => {
     setLoading(true);
+    setError('');
     try {
-      const docData = await doctorService.getDoctorById(id);
+      const docData = await doctorService.getDoctorById(doctorId);
       setDoctor(docData);
-
-      const slotData = await doctorService.getAvailableSlots(id);
-      setSlots(slotData);
-      if (slotData.length > 0) setSelectedSlot(slotData[0]);
     } catch (err) {
       console.error(err);
-      setDoctor({
-        id: id,
-        name: 'Dr. Sarah Jenkins',
-        specialityName: 'Neurologist',
-        experienceYears: 14,
-        consultationFee: 150,
-        city: 'Downtown Medical Center',
-        hospitalName: 'St. Jude Neurological Institute',
-        bio: 'Specializes in Cognitive Disorders and Neurorehabilitation. Over 14 years of clinical practice.',
-        imageUrl: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80',
-        isAvailable: true
-      });
-
-      setSlots([
-        { id: 101, startTime: '2026-08-14T09:00:00', endTime: '2026-08-14T09:30:00', isBooked: false },
-        { id: 102, startTime: '2026-08-14T10:30:00', endTime: '2026-08-14T11:00:00', isBooked: false },
-        { id: 103, startTime: '2026-08-14T14:00:00', endTime: '2026-08-14T14:30:00', isBooked: false },
-        { id: 104, startTime: '2026-08-14T16:30:00', endTime: '2026-08-14T17:00:00', isBooked: false }
-      ]);
+      setError('Doctor record not found.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBooking = async () => {
+  const fetchReviews = async () => {
+    try {
+      const revRes = await reviewService.getDoctorReviews(doctorId);
+      if (revRes && revRes.data) {
+        setReviews(revRes.data);
+      }
+    } catch (err) {
+      console.error('Error fetching doctor reviews', err);
+    }
+  };
+
+  const handleBookClick = () => {
     if (!user) {
+      toast.error('Please log in to book an appointment.');
       navigate('/login');
       return;
     }
     if (!selectedSlot) {
-      alert('Please select a time slot first');
+      toast.error('Please select a time slot first.');
       return;
     }
     setError('');
@@ -78,13 +81,15 @@ export const DoctorDetailPage = () => {
         doctorId: doctor.id,
         appointmentDate: selectedDate,
         timeSlot: selectedSlot,
-        consultationMedium: consultationMedium,
-        paymentMethod: paymentMethod
+        consultationMedium,
+        paymentMethod
       };
 
       const res = await appointmentService.createAppointment(payload);
       setIsModalOpen(false);
-      navigate(`/appointments/${res.data.bookingId}`);
+      toast.success('Appointment booked successfully!');
+      const bookingId = res.data?.bookingId || res.bookingId;
+      navigate(`/appointments/${bookingId}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Slot already booked or invalid request');
     } finally {
@@ -93,6 +98,7 @@ export const DoctorDetailPage = () => {
   };
 
   if (loading) return <div className="page-wrapper" style={{ textAlign: 'center', padding: '60px' }}>Loading doctor details...</div>;
+  if (error && !doctor) return <div className="page-wrapper" style={{ textAlign: 'center', padding: '60px' }}>{error}</div>;
   if (!doctor) return <div className="page-wrapper" style={{ textAlign: 'center', padding: '60px' }}>Doctor not found</div>;
 
   return (
@@ -101,7 +107,15 @@ export const DoctorDetailPage = () => {
         <div className="card" style={{ padding: '32px', marginBottom: '30px' }}>
           <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
             <div style={{ width: '140px', height: '140px', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--primary-light)', flexShrink: 0 }}>
-              <img src={doctor.profilePictureUrl || '/images/doctor.png'} alt={doctor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={doctor.profilePictureUrl || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80'}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=300&q=80';
+                }}
+                alt={doctor.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
 
             <div style={{ flex: 1 }}>
@@ -109,24 +123,56 @@ export const DoctorDetailPage = () => {
                 {doctor.availability ? 'Available for Consultation' : 'Currently Unavailable'}
               </span>
 
-              <h2 style={{ fontSize: '28px', color: 'var(--dark-bg)', marginBottom: '6px' }}>{doctor.name}</h2>
-              <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--primary)', marginBottom: '12px' }}>
-                {doctor.specialization} &bull; {doctor.experience} Years Experience
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                <h2 style={{ fontSize: '28px', color: 'var(--dark-bg)', margin: 0 }}>{doctor.name}</h2>
+                {doctor.degree && (
+                  <span style={{ background: '#e6f4f1', color: '#00685f', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                    {doctor.degree}
+                  </span>
+                )}
+              </div>
+
+              <p style={{ fontSize: '16px', fontWeight: 600, color: 'var(--primary)', marginBottom: '8px' }}>
+                {doctor.specialization} &bull; {doctor.experience || 0} Years Experience
               </p>
+
+              {doctor.licenseNumber && (
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                  Medical Reg. / License No: <strong>{doctor.licenseNumber}</strong>
+                </p>
+              )}
 
               <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px', lineHeight: 1.6 }}>
                 <MapPin size={16} style={{ display: 'inline', marginRight: '6px' }} />
-                {doctor.fullAddress || doctor.workingOn || 'City Medical Center'}
+                {doctor.clinicName || doctor.workingOn || doctor.fullAddress || 'CareConnect Clinic'} {doctor.city ? `(${doctor.city})` : ''}
               </p>
+
+              {doctor.languages && (
+                <p style={{ fontSize: '13px', color: '#3d4947', marginBottom: '16px' }}>
+                  <strong>Languages Spoken:</strong> {doctor.languages}
+                </p>
+              )}
+
+              {doctor.bio && (
+                <div style={{ background: '#f5faf8', padding: '14px', borderRadius: '12px', marginBottom: '16px', border: '1px solid #eaefed', fontSize: '14px', color: '#3d4947' }}>
+                  <strong>About Doctor:</strong> {doctor.bio}
+                </div>
+              )}
 
               <div style={{ display: 'flex', gap: '20px', background: '#f8fafc', padding: '14px 20px', borderRadius: '12px', width: 'fit-content' }}>
                 <div>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Consultation Fee</span>
-                  <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--dark-bg)' }}>₹{doctor.fees}</span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--dark-bg)' }}>₹{doctor.fees || 500}</span>
+                </div>
+                <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '20px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Patient Rating</span>
+                  <span style={{ fontSize: '16px', fontWeight: 800, color: '#d97706', display: 'flex', items: 'center', gap: '4px' }}>
+                    <Star size={16} fill="#d97706" /> {doctor.rating || '4.9'} ({doctor.reviewCount || reviews.length} reviews)
+                  </span>
                 </div>
                 <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '20px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block' }}>Practicing At</span>
-                  <span style={{ fontSize: '14px', fontWeight: 600 }}>{doctor.workingOn || 'Hospital'}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>{doctor.clinicName || doctor.workingOn || 'CareConnect Medical Center'}</span>
                 </div>
               </div>
             </div>
@@ -134,7 +180,7 @@ export const DoctorDetailPage = () => {
         </div>
 
         {/* Appointment Slot Scheduler */}
-        <div className="card" style={{ padding: '32px' }}>
+        <div className="card" style={{ padding: '32px', marginBottom: '30px' }}>
           <h3 style={{ fontSize: '20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Calendar size={22} color="var(--primary)" /> Select Appointment Date & Time Slot
           </h3>
@@ -186,6 +232,36 @@ export const DoctorDetailPage = () => {
             </button>
           </div>
         </div>
+
+        {/* Patient Reviews Section */}
+        <div className="card" style={{ padding: '32px' }}>
+          <h3 style={{ fontSize: '20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <MessageSquare size={22} color="var(--primary)" /> Patient Reviews & Ratings ({reviews.length})
+          </h3>
+
+          {reviews.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>
+              No reviews submitted for this doctor yet. Patients can leave a review after a completed consultation.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {reviews.map((rev) => (
+                <div key={rev.id} style={{ background: '#f8fafc', padding: '16px', borderRadius: '14px', border: '1px solid #eaefed' }}>
+                  <div style={{ display: 'flex', justify: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '14px', color: '#171d1c' }}>{rev.patientName}</span>
+                    <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <Star size={12} fill="#b45309" /> {rev.rating}★
+                    </span>
+                  </div>
+                  {rev.comment && <p style={{ fontSize: '13px', color: '#475569', margin: 0 }}>"{rev.comment}"</p>}
+                  <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginTop: '6px' }}>
+                    {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString() : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Review & Payment Modal */}
@@ -197,7 +273,7 @@ export const DoctorDetailPage = () => {
           <>
             <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancel</button>
             <button className="btn btn-primary" onClick={handleConfirmBooking} disabled={bookingLoading}>
-              {bookingLoading ? 'Processing Payment...' : `Confirm & Pay ₹${doctor.fees}`}
+              {bookingLoading ? 'Processing Payment...' : `Confirm & Pay ₹${doctor.fees || 500}`}
             </button>
           </>
         )}
@@ -210,7 +286,7 @@ export const DoctorDetailPage = () => {
             <p style={{ marginBottom: '8px' }}><strong>Speciality:</strong> {doctor.specialization}</p>
             <p style={{ marginBottom: '8px' }}><strong>Date:</strong> {selectedDate}</p>
             <p style={{ marginBottom: '8px' }}><strong>Time Slot:</strong> {selectedSlot}</p>
-            <p style={{ marginBottom: '0' }}><strong>Amount Payable:</strong> ₹{doctor.fees}</p>
+            <p style={{ marginBottom: '0' }}><strong>Amount Payable:</strong> ₹{doctor.fees || 500}</p>
           </div>
 
           <div className="form-group">
@@ -235,3 +311,4 @@ export const DoctorDetailPage = () => {
     </div>
   );
 };
+

@@ -8,7 +8,7 @@ import { PageTransition } from '../components/common/PageTransition';
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ contact: '', password: '' });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -18,7 +18,7 @@ export const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+
 
     try {
       const user = await login(formData);
@@ -94,14 +94,14 @@ export const LoginPage = () => {
           <div className="mb-6 flex gap-3">
             <button 
               type="button"
-              onClick={() => setFormData({ email: 'doctor@demo.com', password: 'demo123' })}
+              onClick={() => setFormData({ contact: 'doctor@demo.com', password: 'demo123' })}
               className="flex-1 bg-[#d3e5f1] text-[#00685f] py-2 rounded-xl text-xs font-bold hover:bg-[#c0daea] transition-colors border border-[#bcc9c6]/30"
             >
               Load Demo Doctor
             </button>
             <button 
               type="button"
-              onClick={() => setFormData({ email: 'patient@demo.com', password: 'demo123' })}
+              onClick={() => setFormData({ contact: 'patient@demo.com', password: 'demo123' })}
               className="flex-1 bg-[#f0f5f2] text-[#171d1c] py-2 rounded-xl text-xs font-bold hover:bg-[#eaefed] transition-colors border border-[#bcc9c6]/30"
             >
               Load Demo Patient
@@ -118,11 +118,11 @@ export const LoginPage = () => {
                   <Mail size={18} />
                 </div>
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  name="contact"
+                  value={formData.contact}
                   onChange={handleChange}
-                  placeholder="name@example.com"
+                  placeholder="Email or mobile number"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#bcc9c6] bg-[#ffffff] text-sm text-[#171d1c] focus:border-[#00685f] focus:ring-2 focus:ring-[#d3e5f1] focus:outline-none transition-all"
                 />

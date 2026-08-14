@@ -26,4 +26,10 @@ public class RegisterRequest {
     private Integer fees;
     private Integer experience;
     private String workingOn;
+    private String degree;
+    private String licenseNumber;
+    private String clinicName;
+    private String languages;
+    private String bio;
+    private String profilePictureUrl;
 }

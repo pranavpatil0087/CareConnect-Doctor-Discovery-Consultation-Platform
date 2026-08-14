@@ -22,4 +22,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     @Query("SELECT COALESCE(SUM(a.amountPaid), 0) FROM Appointment a WHERE a.doctor.id = :doctorId AND a.status = 'COMPLETED' AND EXTRACT(YEAR FROM a.appointmentDate) = :year")
     BigDecimal calculateTotalEarningsForDoctorInYear(@Param("doctorId") UUID doctorId, @Param("year") int year);
+
+    @Query("SELECT DISTINCT a.patient FROM Appointment a WHERE a.doctor.id = :doctorId")
+    List<com.careconnect.entity.User> findDistinctPatientsByDoctorId(@Param("doctorId") UUID doctorId);
 }

@@ -45,4 +45,19 @@ public class DoctorProfile {
 
     @Column(name = "working_on", length = 255)
     private String workingOn;
+
+    @Column(length = 100)
+    private String degree;
+
+    @Column(name = "license_number", length = 100)
+    private String licenseNumber;
+
+    @Column(name = "clinic_name", length = 150)
+    private String clinicName;
+
+    @Column(length = 255)
+    private String languages;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
 }
